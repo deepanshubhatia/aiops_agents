@@ -409,7 +409,7 @@ def demo():
         console.print("\n[cyan]Starting demo workflow...[/cyan]\n")
         
         # Demo steps would go here
-        console.print("✅ Demo completed!")
+        console.print("Demo completed!")
 
 
 def main():
