@@ -102,35 +102,39 @@ def agents():
 @click.option('--service', required=True, help='Affected service name')
 @click.option('--namespace', default='default', help='Kubernetes namespace')
 @click.option('--symptoms', required=True, help='Comma-separated list of symptoms')
-@click.option('--provider', default='openai', type=click.Choice(['openai', 'google']))
-def run_incident(incident_id, service, namespace, symptoms, provider):
+@click.option('--model', default='glm-4.6:cloud', help='Ollama model to use')
+@click.option('--use-llm/--no-llm', default=True, help='Enable/disable LLM-enhanced analysis')
+def run_incident(incident_id, service, namespace, symptoms, model, use_llm):
     """Run incident response workflow"""
-    
+
     console.print(Panel.fit(
         f"Incident: [bold]{incident_id}[/bold]\n"
         f"Service: {service}\n"
         f"Namespace: {namespace}\n"
-        f"Symptoms: {symptoms}",
+        f"Symptoms: {symptoms}\n"
+        f"Model: {model}",
         title="Incident Response"
     ))
-    
+
     # Initialize orchestrator
     orchestrator = AgentOrchestrator()
-    
+
     # Initialize knowledge graph
     kg = KnowledgeGraph()
     kg.connect()
-    
+
     # Register agents
-    orchestrator.register_agent(TriageAgent(provider=provider))
+    orchestrator.register_agent(TriageAgent(model=model, use_llm=use_llm))
     orchestrator.register_agent(RootCauseAnalyzer(
         knowledge_graph=kg,
-        provider=provider
+        model=model,
+        use_llm=use_llm
     ))
-    orchestrator.register_agent(RemediationAdvisor(provider=provider))
+    orchestrator.register_agent(RemediationAdvisor(model=model, use_llm=use_llm))
     orchestrator.register_agent(ActionExecutor(
         auto_execute=False,
-        provider=provider
+        model=model,
+        use_llm=use_llm
     ))
     
     # Define workflow
